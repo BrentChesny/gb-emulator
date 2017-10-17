@@ -23,9 +23,6 @@ gb_gameboy* gb_gameboy_create()
 
 void gb_gameboy_start(gb_gameboy* gameboy)
 {
-  // Start the CPU
-  gb_cpu_run(gameboy);
-
   // Show the window
   gb_window_show(gameboy);
 }

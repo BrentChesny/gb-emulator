@@ -1,12 +1,13 @@
 #include "window.h"
 #include "gameboy.h"
+#include "error.h"
 
 
 gb_window* gb_window_create()
 {
 	gb_window* window = (gb_window*) malloc(sizeof(gb_window));
 
-	gb_window_init(window, "GameBoy Emulator");
+	gb_window_init(window, "GameBoy");
 	atexit(gb_window_cleanup);
 
 	return window;
@@ -17,16 +18,14 @@ void gb_window_init(gb_window* window, char *title)
 	// Initialise SDL Video
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
 	{
-		printf("Could not initialize SDL: %s\n", SDL_GetError());
-		exit(1);
+		gb_err_panic(NULL, "Could not initialize SDL: %s", SDL_GetError());
 	}
 
 	// Create screen
-	window->screen = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, 0, SDL_HWPALETTE);
+	window->screen = SDL_SetVideoMode(SCREEN_WIDTH * SCREEN_SCALE, SCREEN_HEIGHT * SCREEN_SCALE, 0, SDL_HWPALETTE);
 	if (window->screen == NULL)
 	{
-		printf("Couldn't set screen mode to 160 x 144: %s\n", SDL_GetError());
-		exit(1);
+		gb_err_panic(NULL, "Couldn't set screen mode to 160 x 144: %s", SDL_GetError());
 	}
 
 	// Set the screen title
@@ -37,17 +36,24 @@ void gb_window_show(gb_gameboy* gameboy)
 {
 	while (1)
 	{
+		// Grab input from window
 		gb_window_input();
 
+		// Run one frame worth of cpu cycles
+		gb_cpu_run_frame(gameboy);
+
+		// Draw new frame
 		SDL_LockSurface(gameboy->window->screen);
-
+		size_t w = SCREEN_WIDTH * SCREEN_SCALE;
+		size_t h = SCREEN_HEIGHT * SCREEN_SCALE;
 		uint32_t* p_screen = (uint32_t*) gameboy->window->screen->pixels;
-		for (size_t i = 0; i < SCREEN_WIDTH * SCREEN_HEIGHT; i++) {
-			uint8_t val = gameboy->gpu->buffer[i / SCREEN_WIDTH][i % SCREEN_HEIGHT];
-			*p_screen = SDL_MapRGBA(gameboy->window->screen->format, val, val, val, 0xFF);
-			p_screen++;
+		for (size_t y = 0; y < h; y++) {
+			for (size_t x = 0; x < w; x++) {
+				uint8_t val = gameboy->gpu->buffer[y/SCREEN_SCALE][x/SCREEN_SCALE];
+				uint32_t pixel = SDL_MapRGBA(gameboy->window->screen->format, val, val, val, 0xFF);
+				p_screen[y * SCREEN_WIDTH * SCREEN_SCALE + x] = pixel;
+			}
 		}
-
 	  SDL_UnlockSurface(gameboy->window->screen);
 		SDL_Flip(gameboy->window->screen);
 
@@ -92,19 +98,4 @@ void gb_window_input()
 			break;
 		}
 	}
-}
-
-void gb_window_draw(gb_window* window, uint8_t** buffer)
-{
-	// SDL_LockSurface(window->screen);
-	//
-	// uint32_t* p_screen = (uint32_t*) window->screen->pixels;
-	// for (size_t i = 0; i < SCREEN_WIDTH * SCREEN_HEIGHT; i++) {
-	// 	uint8_t val = buffer[i / SCREEN_WIDTH][i % SCREEN_HEIGHT];
-	// 	*p_screen = SDL_MapRGBA(window->screen->format, val, val, val, 0xFF);
-	// 	p_screen++;
-	// }
-	//
-  // SDL_UnlockSurface(window->screen);
-	// SDL_Flip(window->screen);
 }

@@ -21,45 +21,35 @@ gb_cpu* gb_cpu_create()
 }
 
 
-void gb_cpu_run(gb_gameboy* gameboy)
+void gb_cpu_run_frame(gb_gameboy* gameboy)
 {
-  int error = pthread_create(&gameboy->cpu->thread, NULL, _gb_cpu_run, (void*) gameboy);
-  if (error)
-  {
-    gb_err_panic(gameboy, "pthread_create() returned errorcode: %d", error);
-  }
+  uint32_t frame_clock = gameboy->cpu->m_clock + 17556;
+  do {
+    // 1. Fetch new instruction
+    gameboy->cpu->last_instruction = gb_mmu_rb(gameboy, gameboy->cpu->pc);
+    // gb_err_debug(gameboy, "Instruction: 0x%04x", gameboy->cpu->last_instruction);
+    // gb_err_debug(gameboy, "Program counter: 0x%04x", gameboy->cpu->pc);
+
+    // 2. Increase program counter
+    gameboy->cpu->pc++;
+
+    // 3. Decode and execute instruction
+    gb_ops[gameboy->cpu->last_instruction](gameboy);
+
+    // 4. Execute GPU tick
+    gb_gpu_tick(gameboy, gameboy->cpu->m);
+
+    // 5. Increase clock
+    gameboy->cpu->m_clock += gameboy->cpu->m;
+  } while(gameboy->cpu->m_clock < frame_clock);
 }
 
 void gb_cpu_destroy(gb_cpu* cpu)
 {
-  pthread_cancel(cpu->thread);
   free(cpu);
 }
 
 /* Private functions */
-
-void* _gb_cpu_run(void* gameboy)
-{
-  gb_gameboy* gb = (gb_gameboy*) gameboy;
-  while (1) {
-    if (gb->cpu->pc == 0x100) while(1) {}
-
-    // 1. Fetch new instruction
-    gb->cpu->last_instruction = gb_mmu_rb(gb, gb->cpu->pc);
-    // gb_err_debug(gb, "Instruction: 0x%04x", gb->cpu->last_instruction);
-    // gb_err_debug(gb, "Program counter: 0x%04x", gb->cpu->pc);
-
-    // 2. Increase program counter
-    gb->cpu->pc++;
-
-
-    // 3. Decode and execute instruction
-    gb_ops[gb->cpu->last_instruction](gb);
-
-    // 4. Execute GPU tick
-    gb_gpu_tick(gb, gb->cpu->m);
-  }
-}
 
 void _gb_cpu_reset(gb_cpu* cpu)
 {
@@ -75,4 +65,6 @@ void _gb_cpu_reset(gb_cpu* cpu)
   cpu->pc = 0x0000;
   cpu->m = 0x0000;
   cpu->t = 0x0000;
+  cpu->m_clock = 0x00000000;
+  cpu->t_clock = 0x00000000;
 }

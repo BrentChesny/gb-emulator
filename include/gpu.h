@@ -90,10 +90,21 @@ void gb_gpu_tick(gb_gameboy* gameboy, uint8_t cycles);
 void _gb_gpu_render_scanline(gb_gameboy* gameboy);
 
 /**
- * Render the GameBoy screen to the window
- * @param gameboy An instance of a GameBoy
+ * Load one line of a tile from vram into a local buffer
+ * @param gameboy       An instance of a GameBoy
+ * @param tile_row      The local buffer to load the line into
+ * @param map_entry_idx The index of the tile in the tile map
+ * @param scanline      The current scanline
+ * @param bg_tiles_base The base address of the tileset
+ * @param bg_map_base   The base address of the tilemap
  */
-void _gb_gpu_render_screen(gb_gameboy* gameboy);
+void _gb_gpu_load_tile_row(gb_gameboy* gameboy, uint8_t tile_row[], int map_entry_idx, int y, uint16_t bg_tiles_base, uint16_t bg_map_base);
 
+/**
+ * Parse a palette register to a mapping array
+ * @param reg    The register to parse
+ * @param buffer The array to write the mapping to
+ */
+void _gb_gpu_load_palette(uint8_t reg, uint8_t buffer[]);
 
 #endif /* end of include guard: GPU_H__ */

@@ -7,7 +7,6 @@
 #define CPU_H__
 
 #include <stdint.h>
-#include <pthread.h>
 
 /**
  * Forward declaration of gb_gameboy
@@ -34,9 +33,8 @@ typedef struct gb_cpu {
   // but we use them to help keep track of timing
   uint16_t m;
   uint16_t t;
-
-  // Thread handle
-  pthread_t thread;
+  uint32_t m_clock;
+  uint32_t t_clock;
 
   // Last instructions
   uint8_t last_instruction;
@@ -51,22 +49,16 @@ typedef struct gb_cpu {
 gb_cpu* gb_cpu_create();
 
 /**
- * Starts running the specified GameBoy CPU in a new thread
+ * Run one frame worth of GameBoy CPU instructions
  * @param gameboy The GameBoy instance to run on
  */
-void gb_cpu_run(gb_gameboy* gameboy);
+void gb_cpu_run_frame(gb_gameboy* gameboy);
 
 /**
  * Destroy a GameBoy CPU instance
  * @param cpu The GameBoy CPU instance to destroy
  */
 void gb_cpu_destroy(gb_cpu* cpu);
-
-/**
- * Internal private method that is called by the thread created in gb_cpu_run
- * @param gameboy The GameBoy instance to run on
- */
-void* _gb_cpu_run(void* gameboy);
 
 /**
  * Resets the CPU registers

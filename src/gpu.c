@@ -16,6 +16,9 @@ gb_gpu* gb_gpu_create()
 {
   gb_gpu* gpu = (gb_gpu*) malloc(sizeof(gb_gpu));
   gpu->mode = OAM_MODE;
+  gpu->registers[LCDC] = BG_TILES_FLAG;
+  gpu->registers[SCY] = 0;
+  gpu->registers[SCX] = 0;
   return gpu;
 }
 
@@ -59,16 +62,11 @@ void gb_gpu_tick(gb_gameboy* gameboy, uint8_t cycles)
         if (gameboy->gpu->registers[LY] == 143)
         {
           gameboy->gpu->mode = VBLANK_MODE;
-          // TODO: render the screen
-          _gb_gpu_render_screen(gameboy);
-          // gb_err_debug(NULL, "Rendering screen...");
         }
         else
         {
           gameboy->gpu->mode = OAM_MODE;
         }
-
-        // TODO: curscan += 640 ?
         gameboy->gpu->registers[LY]++;
         gameboy->gpu->clock = 0;
       }
@@ -83,7 +81,6 @@ void gb_gpu_tick(gb_gameboy* gameboy, uint8_t cycles)
         {
           gameboy->gpu->mode = OAM_MODE;
           gameboy->gpu->registers[LY] = 0;
-          // TODO: curscan = 0 ?
         }
       }
       break;
@@ -96,49 +93,59 @@ void _gb_gpu_render_scanline(gb_gameboy* gameboy)
 {
   uint16_t bg_tiles_base = (gameboy->gpu->registers[LCDC] & BG_TILES_FLAG) ? 0x0000 : 0x0800;
   uint16_t bg_map_base = (gameboy->gpu->registers[LCDC] & BG_MAP_FLAG) ? 0x1C00 : 0x1800;
-  bg_map_base += (((gameboy->gpu->registers[LY] + gameboy->gpu->registers[SCY]) % 256) / 8) * 32;
+  bg_map_base += (((gameboy->gpu->registers[LY] + gameboy->gpu->registers[SCY]) & 255) >> 3) << 5;
 
-  int y = (gameboy->gpu->registers[LY] + gameboy->gpu->registers[SCY]) % 8;
-  int x = gameboy->gpu->registers[SCX] % 8;
-  int t = (gameboy->gpu->registers[SCX] / 8) % 32;
+  int y = (gameboy->gpu->registers[LY] + gameboy->gpu->registers[SCY]) & 7;
+  int x = gameboy->gpu->registers[SCX] & 7;
+  int t = (gameboy->gpu->registers[SCX] >> 3) & 31;
 
+  uint8_t bg_palette[4];
+  _gb_gpu_load_palette(gameboy->gpu->registers[BGP], bg_palette);
 
   if (gameboy->gpu->registers[LCDC] & BG_FLAG)
   {
     // For now we assume that the tileset located at offset 0x0000 is used
     // TODO: implement branching on the used tileset
-    int8_t tile = gameboy->gpu->vram[bg_map_base + t];
-    uint16_t tile_addr = bg_tiles_base + (tile * 16) + (y * 2);
-    uint8_t tile_row_upper = gameboy->gpu->vram[tile_addr];
-    uint8_t tile_row_lower = gameboy->gpu->vram[tile_addr + 1];
     uint8_t tile_row[8];
-    for (size_t i = 0; i < 8; i++) {
-      uint8_t bit = 1 << (7 - i);
-      tile_row[i] = ((tile_row_upper & bit) << 1) + (tile_row_lower & bit);
-    }
+    _gb_gpu_load_tile_row(gameboy, tile_row, t, y, bg_tiles_base, bg_map_base);
 
     for (size_t w = 0; w < SCREEN_WIDTH; w++) {
-      gameboy->gpu->buffer[gameboy->gpu->registers[LY]][w] = tile_row[x] * 95;
+      gameboy->gpu->buffer[gameboy->gpu->registers[LY]][w] = bg_palette[tile_row[x]];
       x++;
       // If end of tile is reached, we load the next tile
       if (x == 8)
       {
-        t = (t + 1) % 32;
+        t = (t + 1) & 31;
         x = 0;
-        tile = gameboy->gpu->vram[bg_map_base + t];
-        tile_addr = bg_tiles_base + (tile * 16) + (y * 2);
-        tile_row_upper = gameboy->gpu->vram[tile_addr];
-        tile_row_lower = gameboy->gpu->vram[tile_addr + 1];
-        for (size_t i = 0; i < 8; i++) {
-          uint8_t bit = 1 << (7 - i);
-          tile_row[i] = ((tile_row_upper & bit) << 1) + (tile_row_lower & bit);
-        }
+        _gb_gpu_load_tile_row(gameboy, tile_row, t, y, bg_tiles_base, bg_map_base);
       }
     }
   }
 }
 
-void _gb_gpu_render_screen(gb_gameboy* gameboy)
+void _gb_gpu_load_tile_row(gb_gameboy* gameboy, uint8_t tile_row[], int map_entry_idx, int y, uint16_t bg_tiles_base, uint16_t bg_map_base)
 {
-  gb_window_draw(gameboy->window, (uint8_t**) gameboy->gpu->buffer);
+  int8_t tile = gameboy->gpu->vram[bg_map_base + map_entry_idx];
+  uint16_t tile_addr = bg_tiles_base + (tile * 16) + (y * 2);
+  uint8_t tile_row_lower = gameboy->gpu->vram[tile_addr];
+  uint8_t tile_row_upper = gameboy->gpu->vram[tile_addr + 1];
+  for (size_t i = 0; i < 8; i++) {
+    uint8_t bit = 1 << (7 - i);
+    tile_row[i] = (tile_row_upper & bit) ? 2 : 0;
+    tile_row[i] += (tile_row_lower & bit) ? 1 : 0;
+  }
+}
+
+void _gb_gpu_load_palette(uint8_t reg, uint8_t buffer[])
+{
+  for (size_t i = 0; i < 4; i++)
+  {
+    switch((reg >> (i * 2)) & 3)
+    {
+      case 0: buffer[i] = 255; break;
+      case 1: buffer[i] = 192; break;
+      case 2: buffer[i] = 96; break;
+      case 3: buffer[i] = 0; break;
+    }
+  }
 }

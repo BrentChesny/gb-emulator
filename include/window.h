@@ -11,6 +11,7 @@
 
 #include <SDL/SDL.h>
 
+#define SCREEN_SCALE 2
 #define SCREEN_WIDTH 160
 #define SCREEN_HEIGHT 144
 
@@ -30,7 +31,6 @@ typedef struct gb_window {
 gb_window* gb_window_create();
 void gb_window_init(gb_window* window, char* title);
 void gb_window_show(gb_gameboy* gameboy);
-void gb_window_draw(gb_window* window, uint8_t** buffer);
 void gb_window_destroy(gb_window* window);
 void gb_window_cleanup();
 void gb_window_input();
