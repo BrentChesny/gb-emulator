@@ -2,6 +2,8 @@
 #include "gameboy.h"
 #include "error.h"
 
+#include <time.h>
+
 
 gb_window* gb_window_create()
 {
@@ -39,26 +41,22 @@ void gb_window_show(gb_gameboy* gameboy)
 		// Grab input from window
 		gb_window_input();
 
+		clock_t start = clock();
+
 		// Run one frame worth of cpu cycles
 		gb_cpu_run_frame(gameboy);
 
-		// Draw new frame
-		SDL_LockSurface(gameboy->window->screen);
-		size_t w = SCREEN_WIDTH * SCREEN_SCALE;
-		size_t h = SCREEN_HEIGHT * SCREEN_SCALE;
-		uint32_t* p_screen = (uint32_t*) gameboy->window->screen->pixels;
-		for (size_t y = 0; y < h; y++) {
-			for (size_t x = 0; x < w; x++) {
-				uint8_t val = gameboy->gpu->buffer[y/SCREEN_SCALE][x/SCREEN_SCALE];
-				uint32_t pixel = SDL_MapRGBA(gameboy->window->screen->format, val, val, val, 0xFF);
-				p_screen[y * SCREEN_WIDTH * SCREEN_SCALE + x] = pixel;
-			}
-		}
-	  SDL_UnlockSurface(gameboy->window->screen);
+		// Refresh screen
 		SDL_Flip(gameboy->window->screen);
 
-		// Sleep for a bit to stop SDL from sucking up all CPU time
-		SDL_Delay(16);
+		clock_t end = clock();
+		double cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC * 1000;
+
+		// Sleep for a bit
+		if (cpu_time_used < 16)
+		{
+			SDL_Delay(16 - cpu_time_used);
+		}
 	}
 }
 

@@ -37,7 +37,7 @@ BUILDLIST += $(BUILDDIR)
 CFLAGS := -O2 -Wall -pedantic -Werror
 LFLAGS := `sdl-config --libs`
 INC := -I include $(INCLIST)
-LIB := 
+LIB :=
 
 $(TARGET): $(OBJECTS)
 	@mkdir -p $(TARGETDIR)

@@ -56,12 +56,6 @@ typedef struct gb_gpu {
 
   uint16_t clock;
   uint8_t mode;
-
-  /**
-   * The GameBoy does not physically have this buffer,
-   * but it will help us implement the graphics pipeline.
-   */
-  uint8_t buffer[SCREEN_HEIGHT][SCREEN_WIDTH];
 } gb_gpu;
 
 

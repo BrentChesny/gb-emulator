@@ -110,7 +110,14 @@ void _gb_gpu_render_scanline(gb_gameboy* gameboy)
     _gb_gpu_load_tile_row(gameboy, tile_row, t, y, bg_tiles_base, bg_map_base);
 
     for (size_t w = 0; w < SCREEN_WIDTH; w++) {
-      gameboy->gpu->buffer[gameboy->gpu->registers[LY]][w] = bg_palette[tile_row[x]];
+      // TODO: optimize graphic performance to allow for larger scaling
+      uint32_t* p_screen = (uint32_t*) gameboy->window->screen->pixels;
+      uint32_t pixel = SDL_MapRGBA(gameboy->window->screen->format, bg_palette[tile_row[x]], bg_palette[tile_row[x]], bg_palette[tile_row[x]], 0xFF);
+      for (size_t i = 0; i < SCREEN_SCALE; i++) {
+        for (size_t j = 0; j < SCREEN_SCALE; j++) {
+          p_screen[(gameboy->gpu->registers[LY] * SCREEN_SCALE + i) * SCREEN_WIDTH * SCREEN_SCALE + (w * SCREEN_SCALE + j)] = pixel;
+        }
+      }
       x++;
       // If end of tile is reached, we load the next tile
       if (x == 8)
