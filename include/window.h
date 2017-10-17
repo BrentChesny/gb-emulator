@@ -11,7 +11,7 @@
 
 #include <SDL/SDL.h>
 
-#define SCREEN_SCALE 2
+#define SCREEN_SCALE 1
 #define SCREEN_WIDTH 160
 #define SCREEN_HEIGHT 144
 
