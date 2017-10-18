@@ -40,7 +40,7 @@ uint8_t gb_mmu_rb(gb_gameboy* gameboy, uint16_t addr)
     return gameboy->mmu->wram[addr & 0x1FFF];
   }
   // I/O
-  else if (0xFF00 <= addr && addr < 0xFF4C)
+  else if (0xFF00 <= addr && addr < 0xFF80)
   {
     if (addr == 0xFF01 || addr == 0xFF02)
     {
@@ -60,11 +60,12 @@ uint8_t gb_mmu_rb(gb_gameboy* gameboy, uint16_t addr)
     {
       return gameboy->gpu->registers[addr - 0xFF40];
     }
-  }
-  // BIOS Flag
-  else if (addr == 0xFF50)
-  {
-    return gameboy->mmu->bios_disabled;
+    // BIOS Flag
+    else if (addr == 0xFF50)
+    {
+      return gameboy->mmu->bios_disabled;
+    }
+    return 0;
   }
   // Zero-Page RAM
   else if (0xFF80 <= addr)
@@ -118,7 +119,7 @@ void gb_mmu_wb(gb_gameboy* gameboy, uint16_t addr, uint8_t val)
     return;
   }
   // I/O
-  else if (0xFF00 <= addr && addr < 0xFF4C)
+  else if (0xFF00 <= addr && addr < 0xFF80)
   {
     if (addr == 0xFF01 || addr == 0xFF02)
     {
@@ -140,11 +141,11 @@ void gb_mmu_wb(gb_gameboy* gameboy, uint16_t addr, uint8_t val)
       gameboy->gpu->registers[addr - 0xFF40] = val;
       return;
     }
-  }
-  // BIOS Flag
-  else if (addr == 0xFF50)
-  {
-    gameboy->mmu->bios_disabled = val;
+    else if (addr == 0xFF50)
+    {
+      gameboy->mmu->bios_disabled = val;
+      return;
+    }
     return;
   }
   // Zero-Page RAM
