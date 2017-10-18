@@ -4011,36 +4011,36 @@ void SCF(gb_gameboy* gameboy)
 void PUSHBC(gb_gameboy* gameboy)
 {
   gameboy->cpu->sp--;
-  gb_mmu_wb(gameboy, gameboy->cpu->sp,gameboy->cpu->b);
+  gb_mmu_wb(gameboy, gameboy->cpu->sp, gameboy->cpu->b);
   gameboy->cpu->sp--;
-  gb_mmu_wb(gameboy, gameboy->cpu->sp,gameboy->cpu->c);
+  gb_mmu_wb(gameboy, gameboy->cpu->sp, gameboy->cpu->c);
   gameboy->cpu->m = 3;
 }
 
 void PUSHDE(gb_gameboy* gameboy)
 {
   gameboy->cpu->sp--;
-  gb_mmu_wb(gameboy, gameboy->cpu->sp,gameboy->cpu->d);
+  gb_mmu_wb(gameboy, gameboy->cpu->sp, gameboy->cpu->d);
   gameboy->cpu->sp--;
-  gb_mmu_wb(gameboy, gameboy->cpu->sp,gameboy->cpu->e);
+  gb_mmu_wb(gameboy, gameboy->cpu->sp, gameboy->cpu->e);
   gameboy->cpu->m = 3;
 }
 
 void PUSHHL(gb_gameboy* gameboy)
 {
   gameboy->cpu->sp--;
-  gb_mmu_wb(gameboy, gameboy->cpu->sp,gameboy->cpu->h);
+  gb_mmu_wb(gameboy, gameboy->cpu->sp, gameboy->cpu->h);
   gameboy->cpu->sp--;
-  gb_mmu_wb(gameboy, gameboy->cpu->sp,gameboy->cpu->l);
+  gb_mmu_wb(gameboy, gameboy->cpu->sp, gameboy->cpu->l);
   gameboy->cpu->m = 3;
 }
 
 void PUSHAF(gb_gameboy* gameboy)
 {
   gameboy->cpu->sp--;
-  gb_mmu_wb(gameboy, gameboy->cpu->sp,gameboy->cpu->a);
+  gb_mmu_wb(gameboy, gameboy->cpu->sp, gameboy->cpu->a);
   gameboy->cpu->sp--;
-  gb_mmu_wb(gameboy, gameboy->cpu->sp,gameboy->cpu->f);
+  gb_mmu_wb(gameboy, gameboy->cpu->sp, gameboy->cpu->f);
   gameboy->cpu->m = 3;
 }
 
@@ -4244,7 +4244,7 @@ void DJNZn(gb_gameboy* gameboy)
 void CALLnn(gb_gameboy* gameboy)
 {
   gameboy->cpu->sp -= 2;
-  gb_mmu_ww(gameboy, gameboy->cpu->sp, gameboy->cpu->pc + 2);
+  gb_mmu_ww(gameboy, gameboy->cpu->sp,  gameboy->cpu->pc + 2);
   gameboy->cpu->pc = gb_mmu_rw(gameboy, gameboy->cpu->pc);
   gameboy->cpu->m = 5;
 }
@@ -4255,7 +4255,7 @@ void CALLNZnn(gb_gameboy* gameboy)
   if ((gameboy->cpu->f & ZERO_FLAG) == 0x00)
   {
     gameboy->cpu->sp -= 2;
-    gb_mmu_ww(gameboy, gameboy->cpu->sp, gameboy->cpu->pc + 2);
+    gb_mmu_ww(gameboy, gameboy->cpu->sp,  gameboy->cpu->pc + 2);
     gameboy->cpu->pc = gb_mmu_rw(gameboy, gameboy->cpu->pc);
     gameboy->cpu->m += 2;
   }
@@ -4270,7 +4270,7 @@ void CALLZnn(gb_gameboy* gameboy)
   if ((gameboy->cpu->f & ZERO_FLAG) == ZERO_FLAG)
   {
     gameboy->cpu->sp -= 2;
-    gb_mmu_ww(gameboy, gameboy->cpu->sp, gameboy->cpu->pc + 2);
+    gb_mmu_ww(gameboy, gameboy->cpu->sp,  gameboy->cpu->pc + 2);
     gameboy->cpu->pc = gb_mmu_rw(gameboy, gameboy->cpu->pc);
     gameboy->cpu->m += 2;
   }
@@ -4286,7 +4286,7 @@ void CALLNCnn(gb_gameboy* gameboy)
   if ((gameboy->cpu->f & CARRY_FLAG) == 0x00)
   {
     gameboy->cpu->sp -= 2;
-    gb_mmu_ww(gameboy, gameboy->cpu->sp, gameboy->cpu->pc + 2);
+    gb_mmu_ww(gameboy, gameboy->cpu->sp,  gameboy->cpu->pc + 2);
     gameboy->cpu->pc = gb_mmu_rw(gameboy, gameboy->cpu->pc);
     gameboy->cpu->m += 2;
   }
@@ -4302,7 +4302,7 @@ void CALLCnn(gb_gameboy* gameboy)
   if ((gameboy->cpu->f & CARRY_FLAG) == CARRY_FLAG)
   {
     gameboy->cpu->sp -= 2;
-    gb_mmu_ww(gameboy, gameboy->cpu->sp, gameboy->cpu->pc + 2);
+    gb_mmu_ww(gameboy, gameboy->cpu->sp,  gameboy->cpu->pc + 2);
     gameboy->cpu->pc = gb_mmu_rw(gameboy, gameboy->cpu->pc);
     gameboy->cpu->m += 2;
   }
@@ -4358,6 +4358,130 @@ void RETC(gb_gameboy* gameboy)
     gameboy->cpu->sp += 2;
     gameboy->cpu->m += 2;
   }
+}
+
+void RETI(gb_gameboy* gameboy)
+{
+ gameboy->cpu->interrupts_enabled = true;
+ gameboy->cpu->pc = gb_mmu_rw(gameboy, gameboy->cpu->sp);
+ gameboy->cpu->sp += 2;
+ gameboy->cpu->m = 3;
+}
+
+void RST00(gb_gameboy* gameboy)
+{
+  gameboy->cpu->sp -= 2;
+  gb_mmu_ww(gameboy, gameboy->cpu->sp, gameboy->cpu->pc);
+  gameboy->cpu->pc = 0x00;
+  gameboy->cpu->m = 3;
+}
+
+void RST08(gb_gameboy* gameboy)
+{
+  gameboy->cpu->sp -= 2;
+  gb_mmu_ww(gameboy, gameboy->cpu->sp, gameboy->cpu->pc);
+  gameboy->cpu->pc = 0x08;
+  gameboy->cpu->m = 3;
+}
+
+void RST10(gb_gameboy* gameboy)
+{
+  gameboy->cpu->sp -= 2;
+  gb_mmu_ww(gameboy, gameboy->cpu->sp, gameboy->cpu->pc);
+  gameboy->cpu->pc = 0x10;
+  gameboy->cpu->m = 3;
+}
+
+void RST18(gb_gameboy* gameboy)
+{
+  gameboy->cpu->sp -= 2;
+  gb_mmu_ww(gameboy, gameboy->cpu->sp, gameboy->cpu->pc);
+  gameboy->cpu->pc = 0x18;
+  gameboy->cpu->m = 3;
+}
+
+void RST20(gb_gameboy* gameboy)
+{
+  gameboy->cpu->sp -= 2;
+  gb_mmu_ww(gameboy, gameboy->cpu->sp, gameboy->cpu->pc);
+  gameboy->cpu->pc = 0x20;
+  gameboy->cpu->m = 3;
+}
+
+void RST28(gb_gameboy* gameboy)
+{
+  gameboy->cpu->sp -= 2;
+  gb_mmu_ww(gameboy, gameboy->cpu->sp, gameboy->cpu->pc);
+  gameboy->cpu->pc = 0x28;
+  gameboy->cpu->m = 3;
+}
+
+void RST30(gb_gameboy* gameboy)
+{
+  gameboy->cpu->sp -= 2;
+  gb_mmu_ww(gameboy, gameboy->cpu->sp, gameboy->cpu->pc);
+  gameboy->cpu->pc = 0x30;
+  gameboy->cpu->m = 3;
+}
+
+void RST38(gb_gameboy* gameboy)
+{
+  gameboy->cpu->sp -= 2;
+  gb_mmu_ww(gameboy, gameboy->cpu->sp, gameboy->cpu->pc);
+  gameboy->cpu->pc = 0x38;
+  gameboy->cpu->m = 3;
+}
+
+void RST40(gb_gameboy* gameboy)
+{
+  gameboy->cpu->sp -= 2;
+  gb_mmu_ww(gameboy, gameboy->cpu->sp, gameboy->cpu->pc);
+  gameboy->cpu->pc = 0x40;
+  gameboy->cpu->m = 3;
+}
+
+void RST48(gb_gameboy* gameboy)
+{
+  gameboy->cpu->sp -= 2;
+  gb_mmu_ww(gameboy, gameboy->cpu->sp, gameboy->cpu->pc);
+  gameboy->cpu->pc = 0x48;
+  gameboy->cpu->m = 3;
+}
+
+void RST50(gb_gameboy* gameboy)
+{
+  gameboy->cpu->sp -= 2;
+  gb_mmu_ww(gameboy, gameboy->cpu->sp, gameboy->cpu->pc);
+  gameboy->cpu->pc = 0x50;
+  gameboy->cpu->m = 3;
+}
+
+void RST58(gb_gameboy* gameboy)
+{
+  gameboy->cpu->sp -= 2;
+  gb_mmu_ww(gameboy, gameboy->cpu->sp, gameboy->cpu->pc);
+  gameboy->cpu->pc = 0x58;
+  gameboy->cpu->m = 3;
+}
+
+void RST60(gb_gameboy* gameboy)
+{
+  gameboy->cpu->sp -= 2;
+  gb_mmu_ww(gameboy, gameboy->cpu->sp, gameboy->cpu->pc);
+  gameboy->cpu->pc = 0x60;
+  gameboy->cpu->m = 3;
+}
+
+void DI(gb_gameboy* gameboy)
+{
+  gameboy->cpu->interrupts_enabled = false;
+  gameboy->cpu->m = 1;
+}
+
+void EI(gb_gameboy* gameboy)
+{
+  gameboy->cpu->interrupts_enabled = true;
+  gameboy->cpu->m = 1;
 }
 
 void NOP(gb_gameboy* gameboy)
@@ -4585,7 +4709,7 @@ void (*gb_ops[]) (gb_gameboy* gameboy) = {
   CALLNZnn,
   PUSHBC,
   ADDn,
-  XX,
+  RST00,
   RETZ,
   RET,
   JPZnn,
@@ -4593,7 +4717,7 @@ void (*gb_ops[]) (gb_gameboy* gameboy) = {
   CALLZnn,
   CALLnn,
   ADCn,
-  XX,
+  RST08,
   RETNC,
   POPDE,
   JPNCnn,
@@ -4601,15 +4725,15 @@ void (*gb_ops[]) (gb_gameboy* gameboy) = {
   CALLNCnn,
   PUSHDE,
   SUBn,
-  XX,
+  RST10,
   RETC,
-  XX,
+  RETI,
   JPCnn,
   XX,
   CALLCnn,
   XX,
   SBCn,
-  XX,
+  RST18,
   LDIOnA,
   POPHL,
   LDIOCA,
@@ -4617,7 +4741,7 @@ void (*gb_ops[]) (gb_gameboy* gameboy) = {
   XX,
   PUSHHL,
   ANDn,
-  XX,
+  RST20,
   ADDSPn,
   JPHL,
   LDmmA,
@@ -4625,23 +4749,23 @@ void (*gb_ops[]) (gb_gameboy* gameboy) = {
   XX,
   XX,
   XORn,
-  XX,
+  RST28,
   LDAIOn,
   POPAF,
   LDAIOC,
-  XX,
+  DI,
   XX,
   PUSHAF,
   ORn,
-  XX,
+  RST30,
   LDHLSPn,
   XX,
   LDAmm,
-  XX,
+  EI,
   XX,
   XX,
   CPn,
-  XX,
+  RST38,
 };
 
 

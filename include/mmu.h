@@ -25,6 +25,8 @@ typedef struct gb_mmu {
   uint8_t bios_disabled;
   uint8_t zram[ZRAM_SIZE];
   uint8_t wram[WRAM_SIZE];
+  uint8_t enabled_interrupts;
+  uint8_t triggered_interrupts;
 } gb_mmu;
 
 /**

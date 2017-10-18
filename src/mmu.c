@@ -20,7 +20,7 @@ void gb_mmu_destroy(gb_mmu* mmu)
 uint8_t gb_mmu_rb(gb_gameboy* gameboy, uint16_t addr)
 {
   // BIOS
-  if (addr <= 0x100 && !gameboy->mmu->bios_disabled)
+  if (addr < 0x100 && !gameboy->mmu->bios_disabled)
   {
     return BIOS_BINARY[addr];
   }
@@ -42,7 +42,16 @@ uint8_t gb_mmu_rb(gb_gameboy* gameboy, uint16_t addr)
   // I/O
   else if (0xFF00 <= addr && addr < 0xFF4C)
   {
-    if (0xFF10 <= addr && addr < 0xFF40)
+    if (addr == 0xFF01 || addr == 0xFF02)
+    {
+      gb_err_debug(gameboy, "Unhandled read from serial register 0x%04x", addr);
+      return 0;
+    }
+    else if (addr == 0xFF0F)
+    {
+      return gameboy->mmu->triggered_interrupts;
+    }
+    else if (0xFF10 <= addr && addr < 0xFF40)
     {
       gb_err_debug(gameboy, "Unhandled read from sound register 0x%04x", addr);
       return 0;
@@ -58,8 +67,12 @@ uint8_t gb_mmu_rb(gb_gameboy* gameboy, uint16_t addr)
     return gameboy->mmu->bios_disabled;
   }
   // Zero-Page RAM
-  else if (0xFF7F <= addr)
+  else if (0xFF80 <= addr)
   {
+    if (addr == 0xFFFF)
+    {
+      return gameboy->mmu->enabled_interrupts;
+    }
     return gameboy->mmu->zram[addr & 0x7F];
   }
 
@@ -70,9 +83,15 @@ uint8_t gb_mmu_rb(gb_gameboy* gameboy, uint16_t addr)
 void gb_mmu_wb(gb_gameboy* gameboy, uint16_t addr, uint8_t val)
 {
   // BIOS
-  if (addr <= 0x100 && !gameboy->mmu->bios_disabled)
+  if (addr < 0x100 && !gameboy->mmu->bios_disabled)
   {
     gb_err_panic(gameboy, "Trying to write into BIOS rom at address 0x%04x", addr);
+    return;
+  }
+  // CARTRIDGE ROM
+  else if (addr < 0x8000)
+  {
+    gb_err_debug(gameboy, "Unhandled write to cartridge rom at address 0x%04x", addr);
     return;
   }
   // VRAM
@@ -87,10 +106,31 @@ void gb_mmu_wb(gb_gameboy* gameboy, uint16_t addr, uint8_t val)
     gameboy->mmu->wram[addr & 0x1FFF] = val;
     return;
   }
+  // Sprite attribute memory (OAM)
+  else if (0xFE00 <= addr && addr < 0xFEA0)
+  {
+    // TODO: write to OAM
+    return;
+  }
+  // Unused memory, ignore
+  else if (0xFEA0 <= addr && addr < 0xFF00)
+  {
+    return;
+  }
   // I/O
   else if (0xFF00 <= addr && addr < 0xFF4C)
   {
-    if (0xFF10 <= addr && addr < 0xFF40)
+    if (addr == 0xFF01 || addr == 0xFF02)
+    {
+      gb_err_debug(gameboy, "Unhandled write to serial register 0x%04x", addr);
+      return;
+    }
+    else if (addr == 0xFF0F)
+    {
+      gameboy->mmu->triggered_interrupts = val;
+      return;
+    }
+    else if (0xFF10 <= addr && addr < 0xFF40)
     {
       gb_err_debug(gameboy, "Unhandled write to sound register 0x%04x", addr);
       return;
@@ -108,8 +148,13 @@ void gb_mmu_wb(gb_gameboy* gameboy, uint16_t addr, uint8_t val)
     return;
   }
   // Zero-Page RAM
-  else if (0xFF7F <= addr)
+  else if (0xFF80 <= addr)
   {
+    if (addr == 0xFFFF)
+    {
+      gameboy->mmu->enabled_interrupts = val;
+      return;
+    }
     gameboy->mmu->zram[addr & 0x7F] = val;
     return;
   }

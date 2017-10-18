@@ -21,5 +21,13 @@ extern void (*gb_ops[]) (gb_gameboy* gameboy);
  */
 extern void (*gb_bit_ops[]) (gb_gameboy* gameboy);
 
+/**
+ * Interrupt service routines
+ */
+void RST40(gb_gameboy* gameboy);
+void RST48(gb_gameboy* gameboy);
+void RST50(gb_gameboy* gameboy);
+void RST58(gb_gameboy* gameboy);
+void RST60(gb_gameboy* gameboy);
 
 #endif /* end of include guard: OPS_H__ */

@@ -6,7 +6,15 @@
 #ifndef CPU_H__
 #define CPU_H__
 
+#include "defs.h"
+
 #include <stdint.h>
+
+#define VBLANK_INTERRUPT_FLAG 0x01
+#define LCDSTAT_INTERRUPT_FLAG 0x02
+#define TIMER_INTERRUPT_FLAG 0x04
+#define SERIAL_INTERRUPT_FLAG 0x08
+#define JOYPAD_INTERRUPT_FLAG 0x10
 
 /**
  * Forward declaration of gb_gameboy
@@ -39,6 +47,8 @@ typedef struct gb_cpu {
   // Last instructions
   uint8_t last_instruction;
   uint8_t last_bit_instruction;
+
+  bool interrupts_enabled;
 } gb_cpu;
 
 
@@ -65,6 +75,12 @@ void gb_cpu_destroy(gb_cpu* cpu);
  * @param cpu The GameBoy CPU instance to reset
  */
 void _gb_cpu_reset(gb_cpu* cpu);
+
+/**
+ * Run the necessary interrupt routines that have been triggered
+ * @param gameboy The GameBoy instance to run on
+ */
+void _gb_cpu_handle_interrupts(gb_gameboy* gameboy);
 
 
 

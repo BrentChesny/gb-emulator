@@ -6,6 +6,8 @@
 #ifndef DEFS_H__
 #define DEFS_H__
 
+typedef enum { false, true } bool;
+
 #define HI_NIBBLE_MASK 0xF0
 #define LO_NIBBLE_MASK 0x0F
 #define HALF_BYTE_MASK 0x7F
