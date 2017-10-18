@@ -5,7 +5,6 @@
  */
 #include "gpu.h"
 #include "error.h"
-#include "window.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -111,8 +110,8 @@ void _gb_gpu_render_scanline(gb_gameboy* gameboy)
 
     for (size_t w = 0; w < SCREEN_WIDTH; w++) {
       // TODO: optimize graphic performance to allow for larger scaling
-      uint32_t* p_screen = (uint32_t*) gameboy->window->screen->pixels;
-      uint32_t pixel = SDL_MapRGBA(gameboy->window->screen->format, bg_palette[tile_row[x]], bg_palette[tile_row[x]], bg_palette[tile_row[x]], 0xFF);
+      uint32_t* p_screen = (uint32_t*) gameboy->screen->pixels;
+      uint32_t pixel = SDL_MapRGBA(gameboy->screen->format, bg_palette[tile_row[x]], bg_palette[tile_row[x]], bg_palette[tile_row[x]], 0xFF);
       for (size_t i = 0; i < SCREEN_SCALE; i++) {
         for (size_t j = 0; j < SCREEN_SCALE; j++) {
           p_screen[(gameboy->gpu->registers[LY] * SCREEN_SCALE + i) * SCREEN_WIDTH * SCREEN_SCALE + (w * SCREEN_SCALE + j)] = pixel;

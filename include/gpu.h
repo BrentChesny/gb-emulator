@@ -6,8 +6,6 @@
 #ifndef GPU_H__
 #define GPU_H__
 
-#include "window.h"
-
 #include <stdint.h>
 
 #define VRAM_SIZE 8192
