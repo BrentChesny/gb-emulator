@@ -19,6 +19,12 @@ gb_gameboy* gb_gameboy_create()
   gameboy->mmu = gb_mmu_create();
   gameboy->gpu = gb_gpu_create();
 
+  gameboy->joypad_col = 0x00;
+  gameboy->joypad_rows[0] = 0x0F;
+  gameboy->joypad_rows[1] = 0x0F;
+
+  gameboy->verbosity = GB_VERBOSITY_MED;
+
   gb_gameboy_init_window(gameboy, "GameBoy");
   atexit(gb_gameboy_cleanup_window);
 
@@ -107,10 +113,68 @@ void gb_gameboy_input(gb_gameboy* gameboy)
 				{
 					case SDLK_ESCAPE:
 						exit(0);
-					break;
-
+					  break;
+          case SDLK_RETURN:
+					  gameboy->joypad_rows[0] &= 0x7;
+					  break;
+          case SDLK_SPACE:
+            gameboy->joypad_rows[0] &= 0xB;
+            break;
+          case SDLK_z:
+					  gameboy->joypad_rows[0] &= 0xD;
+					  break;
+          case SDLK_x:
+            gameboy->joypad_rows[0] &= 0xE;
+            break;
+          case SDLK_DOWN:
+					  gameboy->joypad_rows[1] &= 0x7;
+					  break;
+          case SDLK_UP:
+            gameboy->joypad_rows[1] &= 0xB;
+            break;
+          case SDLK_LEFT:
+					  gameboy->joypad_rows[1] &= 0xD;
+					  break;
+          case SDLK_RIGHT:
+            gameboy->joypad_rows[1] &= 0xE;
+            break;
 					default:
-					break;
+					  break;
+				}
+			break;
+
+      case SDL_KEYUP:
+				switch (event.key.keysym.sym)
+				{
+					case SDLK_ESCAPE:
+						exit(0);
+					  break;
+          case SDLK_RETURN:
+					  gameboy->joypad_rows[0] |= 0x8;
+					  break;
+          case SDLK_SPACE:
+            gameboy->joypad_rows[0] |= 0x4;
+            break;
+          case SDLK_z:
+					  gameboy->joypad_rows[0] |= 0x2;
+					  break;
+          case SDLK_x:
+            gameboy->joypad_rows[0] |= 0x1;
+            break;
+          case SDLK_DOWN:
+					  gameboy->joypad_rows[1] |= 0x8;
+					  break;
+          case SDLK_UP:
+            gameboy->joypad_rows[1] |= 0x4;
+            break;
+          case SDLK_LEFT:
+					  gameboy->joypad_rows[1] |= 0x2;
+					  break;
+          case SDLK_RIGHT:
+            gameboy->joypad_rows[1] |= 0x1;
+            break;
+					default:
+					  break;
 				}
 			break;
 		}

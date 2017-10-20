@@ -10,6 +10,7 @@
 #include "mmu.h"
 #include "gpu.h"
 #include "cartridge.h"
+#include "error.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,6 +29,13 @@ typedef struct gb_gameboy {
 
   // Weak references
   gb_cartridge* cartridge;
+
+  // Joypad
+  uint8_t joypad_col;
+  uint8_t joypad_rows[2];
+
+  // Logging
+  gb_err_verbosity verbosity;
 } gb_gameboy;
 
 /**
@@ -48,10 +56,29 @@ void gb_gameboy_start(gb_gameboy* gameboy);
  */
 void gb_gameboy_destroy(gb_gameboy* gameboy);
 
+/**
+ * Links a game cardridge to the GameBoy
+ * @param gameboy   An instance of the GameBoy
+ * @param cartridge An instance of a cardridge
+ */
 void gb_gameboy_insert_cartridge(gb_gameboy* gameboy, gb_cartridge* cartridge);
 
+/**
+ * Initialises the GameBoy window
+ * @param gameboy An instance of the GameBoy
+ * @param title   The title for the GameBoy window
+ */
 void gb_gameboy_init_window(gb_gameboy* gameboy, char* title);
+
+/**
+ * Cleanup SDL after closing the window
+ */
 void gb_gameboy_cleanup_window();
+
+/**
+ * Handle the input for the GameBoy
+ * @param gameboy An instance of the GameBoy
+ */
 void gb_gameboy_input(gb_gameboy* gameboy);
 
 #endif /* end of include guard: GAMEBOY_H__ */

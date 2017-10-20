@@ -4434,6 +4434,7 @@ void RST38(gb_gameboy* gameboy)
 
 void RST40(gb_gameboy* gameboy)
 {
+  gameboy->cpu->interrupts_enabled = false;
   gameboy->cpu->sp -= 2;
   gb_mmu_ww(gameboy, gameboy->cpu->sp, gameboy->cpu->pc);
   gameboy->cpu->pc = 0x40;

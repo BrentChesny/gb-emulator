@@ -27,8 +27,11 @@ void gb_cpu_run_frame(gb_gameboy* gameboy)
   do {
     // 1. Fetch new instruction
     gameboy->cpu->last_instruction = gb_mmu_rb(gameboy, gameboy->cpu->pc);
-    // gb_err_debug(gameboy, "Instruction: 0x%04x", gameboy->cpu->last_instruction);
-    // gb_err_debug(gameboy, "Program counter: 0x%04x", gameboy->cpu->pc);
+    if (gameboy->cpu->log_instructions) {
+      gb_err_debug(gameboy, "Instruction: 0x%04x\t\tProgram counter: 0x%04x", gameboy->cpu->last_instruction, gameboy->cpu->pc);
+      gb_err_debug(gameboy, "Register A: 0x%02x", gameboy->cpu->a);
+      // gb_err_debug(gameboy, "0x%02x", gameboy->mmu->zram[0xFF85 & 0x7F]);
+    }
 
     // 2. Increase program counter
     gameboy->cpu->pc++;
@@ -72,6 +75,7 @@ void _gb_cpu_reset(gb_cpu* cpu)
   cpu->t_clock = 0x00000000;
 
   cpu->interrupts_enabled = true;
+  cpu->log_instructions = false;
 }
 
 void _gb_cpu_handle_interrupts(gb_gameboy* gameboy)

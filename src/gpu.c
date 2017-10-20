@@ -5,6 +5,7 @@
  */
 #include "gpu.h"
 #include "error.h"
+#include "gameboy.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -74,6 +75,10 @@ void gb_gpu_tick(gb_gameboy* gameboy, uint8_t cycles)
       // End of v-blank
       if (gameboy->gpu->clock >= 114)
       {
+        if (gameboy->gpu->registers[LY] == 144)
+        {
+          gameboy->mmu->triggered_interrupts |= VBLANK_INTERRUPT_FLAG;
+        }
         gameboy->gpu->clock = 0;
         gameboy->gpu->registers[LY]++;
         if (gameboy->gpu->registers[LY] > 153)
@@ -90,7 +95,7 @@ void gb_gpu_tick(gb_gameboy* gameboy, uint8_t cycles)
 
 void _gb_gpu_render_scanline(gb_gameboy* gameboy)
 {
-  uint16_t bg_tiles_base = (gameboy->gpu->registers[LCDC] & BG_TILES_FLAG) ? 0x0000 : 0x0800;
+  uint16_t bg_tiles_base = (gameboy->gpu->registers[LCDC] & BG_TILES_FLAG) ? 0x0000 : 0x1000;
   uint16_t bg_map_base = (gameboy->gpu->registers[LCDC] & BG_MAP_FLAG) ? 0x1C00 : 0x1800;
   bg_map_base += (((gameboy->gpu->registers[LY] + gameboy->gpu->registers[SCY]) & 255) >> 3) << 5;
 
@@ -131,8 +136,17 @@ void _gb_gpu_render_scanline(gb_gameboy* gameboy)
 
 void _gb_gpu_load_tile_row(gb_gameboy* gameboy, uint8_t tile_row[], int map_entry_idx, int y, uint16_t bg_tiles_base, uint16_t bg_map_base)
 {
-  int8_t tile = gameboy->gpu->vram[bg_map_base + map_entry_idx];
-  uint16_t tile_addr = bg_tiles_base + (tile * 16) + (y * 2);
+  uint8_t tile = gameboy->gpu->vram[bg_map_base + map_entry_idx];
+  uint16_t tile_addr;
+  if (bg_tiles_base == 0x1000)
+  {
+    int8_t tile_idx = (int8_t) tile;
+    tile_addr = bg_tiles_base + (tile_idx * 16) + (y * 2);
+  }
+  else
+  {
+    tile_addr = bg_tiles_base + (tile * 16) + (y * 2);
+  }
   uint8_t tile_row_lower = gameboy->gpu->vram[tile_addr];
   uint8_t tile_row_upper = gameboy->gpu->vram[tile_addr + 1];
   for (size_t i = 0; i < 8; i++) {

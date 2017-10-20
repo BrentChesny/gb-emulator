@@ -1,6 +1,7 @@
 #include "mmu.h"
 #include "bios.h"
 #include "error.h"
+#include "gameboy.h"
 
 #include <stdlib.h>
 
@@ -40,11 +41,22 @@ uint8_t gb_mmu_rb(gb_gameboy* gameboy, uint16_t addr)
     return gameboy->mmu->wram[addr & 0x1FFF];
   }
   // I/O
-  else if (0xFF00 <= addr && addr < 0xFF80)
+  else if (0xFF00 <= addr && addr < 0xFF4C)
   {
-    if (addr == 0xFF01 || addr == 0xFF02)
+    if (addr == 0xFF00)
     {
-      gb_err_debug(gameboy, "Unhandled read from serial register 0x%04x", addr);
+      if (gameboy->joypad_col == 0x10)
+      {
+        return gameboy->joypad_rows[0];
+      }
+      else if (gameboy->joypad_col == 0x20)
+      {
+        return gameboy->joypad_rows[1];
+      }
+    }
+    else if (addr == 0xFF01 || addr == 0xFF02)
+    {
+      gb_err_info(gameboy, "Unhandled read from serial register 0x%04x", addr);
       return 0;
     }
     else if (addr == 0xFF0F)
@@ -53,19 +65,19 @@ uint8_t gb_mmu_rb(gb_gameboy* gameboy, uint16_t addr)
     }
     else if (0xFF10 <= addr && addr < 0xFF40)
     {
-      gb_err_debug(gameboy, "Unhandled read from sound register 0x%04x", addr);
+      //gb_err_debug(gameboy, "Unhandled read from sound register 0x%04x", addr);
       return 0;
     }
     else if ((addr & 0xFF40) == 0xFF40)
     {
       return gameboy->gpu->registers[addr - 0xFF40];
     }
-    // BIOS Flag
-    else if (addr == 0xFF50)
-    {
-      return gameboy->mmu->bios_disabled;
-    }
     return 0;
+  }
+  // BIOS Flag
+  else if (addr == 0xFF50)
+  {
+    return gameboy->mmu->bios_disabled;
   }
   // Zero-Page RAM
   else if (0xFF80 <= addr)
@@ -110,7 +122,7 @@ void gb_mmu_wb(gb_gameboy* gameboy, uint16_t addr, uint8_t val)
   // Sprite attribute memory (OAM)
   else if (0xFE00 <= addr && addr < 0xFEA0)
   {
-    // TODO: write to OAM
+    gameboy->gpu->oam[addr - 0xFE00] = val;
     return;
   }
   // Unused memory, ignore
@@ -119,11 +131,16 @@ void gb_mmu_wb(gb_gameboy* gameboy, uint16_t addr, uint8_t val)
     return;
   }
   // I/O
-  else if (0xFF00 <= addr && addr < 0xFF80)
+  else if (0xFF00 <= addr && addr < 0xFF4C)
   {
-    if (addr == 0xFF01 || addr == 0xFF02)
+    if (addr == 0xFF00)
     {
-      gb_err_debug(gameboy, "Unhandled write to serial register 0x%04x", addr);
+      gameboy->joypad_col = val & 0x30;
+      return;
+    }
+    else if (addr == 0xFF01 || addr == 0xFF02)
+    {
+      gb_err_info(gameboy, "Unhandled write to serial register 0x%04x", addr);
       return;
     }
     else if (addr == 0xFF0F)
@@ -133,7 +150,7 @@ void gb_mmu_wb(gb_gameboy* gameboy, uint16_t addr, uint8_t val)
     }
     else if (0xFF10 <= addr && addr < 0xFF40)
     {
-      gb_err_debug(gameboy, "Unhandled write to sound register 0x%04x", addr);
+      //gb_err_debug(gameboy, "Unhandled write to sound register 0x%04x", addr);
       return;
     }
     else if ((addr & 0xFF40) == 0xFF40)
@@ -141,11 +158,16 @@ void gb_mmu_wb(gb_gameboy* gameboy, uint16_t addr, uint8_t val)
       gameboy->gpu->registers[addr - 0xFF40] = val;
       return;
     }
-    else if (addr == 0xFF50)
-    {
-      gameboy->mmu->bios_disabled = val;
-      return;
-    }
+    return;
+  }
+  else if (addr == 0xFF50)
+  {
+    gameboy->mmu->bios_disabled = val;
+    return;
+  }
+  // Unused memory, ignore
+  else if (0xFF51 <= addr && addr < 0xFF80)
+  {
     return;
   }
   // Zero-Page RAM

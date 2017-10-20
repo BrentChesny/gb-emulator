@@ -49,6 +49,7 @@ typedef struct gb_cpu {
   uint8_t last_bit_instruction;
 
   bool interrupts_enabled;
+  bool log_instructions;
 } gb_cpu;
 
 

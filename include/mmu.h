@@ -41,13 +41,36 @@ gb_mmu* gb_mmu_create();
  */
 void gb_mmu_destroy(gb_mmu* mmu);
 
-
+/**
+ * Read a byte from the given address
+ * @param  gameboy An instance of the GameBoy
+ * @param  addr    The address to read from
+ * @return         The value that was read
+ */
 uint8_t gb_mmu_rb(gb_gameboy* gameboy, uint16_t addr);
 
+/**
+ * Write a byte from the given address
+ * @param gameboy An instance of the GameBoy
+ * @param addr    The address to write to
+ * @param val     The value to write
+ */
 void gb_mmu_wb(gb_gameboy* gameboy, uint16_t addr, uint8_t val);
 
+/**
+ * Read a word from the given address
+ * @param  gameboy An instance of the GameBoy
+ * @param  addr    The address to read from
+ * @return         The value that was read
+ */
 uint16_t gb_mmu_rw(gb_gameboy* gameboy, uint16_t addr);
 
+/**
+ * Write a word from the given address
+ * @param gameboy An instance of the GameBoy
+ * @param addr    The address to write to
+ * @param val     The value to write
+ */
 void gb_mmu_ww(gb_gameboy* gameboy, uint16_t addr, uint16_t val);
 
 

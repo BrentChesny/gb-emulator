@@ -9,6 +9,7 @@
 #include <stdint.h>
 
 #define VRAM_SIZE 8192
+#define OAM_SIZE 160
 #define N_GPU_REGISTERS 11
 
 #define OAM_MODE 1
@@ -50,6 +51,7 @@ typedef struct gb_gameboy gb_gameboy;
  */
 typedef struct gb_gpu {
   uint8_t vram[VRAM_SIZE];
+  uint8_t oam[OAM_SIZE];
   uint8_t registers[N_GPU_REGISTERS];
 
   uint16_t clock;
